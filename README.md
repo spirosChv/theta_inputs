@@ -21,14 +21,14 @@ Recommendation: run under anaconda on a fresh environment.
 The parameters are:
 
 ```python
-spikes = theta_filtered_spikes(rate=12,
-                               nrun=1,
-                               N=1000,
-                               time=2000,
-                               delay=400,
-                               noise=0.0,
-                               f_theta=8,
-                               phi_theta=0,
+spikes = theta_filtered_spikes(rate,
+                               nrun,
+                               N,
+                               time,
+                               delay,
+                               noise,
+                               f_theta,
+                               phi_theta,
                                save=True,
                                visualize=True)
 ```
@@ -48,4 +48,4 @@ Params:
 
 <br>
 
-![](rasterplot.png)
+![](raster_plot.png)
