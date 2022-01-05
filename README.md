@@ -1,9 +1,10 @@
+# Theta modulated Poisson distributed spike trains
+
 To run the file execute the given python script.
 
-Requirements: matplotlib, numpy, and brian2
+Requirements: matplotlib, numpy, and [brian2](https://brian2.readthedocs.io/en/stable/)
 
-
-In case you do not have them, execute:
+In case you do not have these packages, execute:
 
 `pip install -r requirements.txt`
 
