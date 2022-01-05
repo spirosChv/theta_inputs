@@ -42,3 +42,10 @@ Params:
 - `noise`: from 0 (deterministic) to 1. How much noise in the data set.
 - `f_theta`: theta cycle frequency in Hz.
 - `phi_theta`: theta cycle phase in radians.
+
+
+![](histogram.png)
+
+<br>
+
+![](rasterplot.png)
