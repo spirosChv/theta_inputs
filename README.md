@@ -44,8 +44,8 @@ Params:
 - `phi_theta`: theta cycle phase in radians.
 
 
-![](histogram.png)
+![](figures/histogram.png)
 
 <br>
 
-![](raster_plot.png)
+![](figures/raster_plot.png)
