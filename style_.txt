@@ -1,0 +1,20 @@
+#### MATPLOTLIBRC FORMAT
+
+# For more info: https://github.com/matplotlib/matplotlib/blob/v3.3.4/matplotlibrc.template
+
+text.usetex: False
+font.family: Times New Roman
+font.weight: bold
+axes.labelsize: 16
+font.size: 16
+legend.fontsize: 14
+xtick.labelsize: 14
+ytick.labelsize: 14
+axes.linewidth: 2.5
+axes.labelweight: bold
+lines.markersize: 10.0
+lines.linewidth: 3.5
+xtick.major.width: 2.2
+ytick.major.width: 2.2
+axes.spines.right: False
+axes.spines.top: False
