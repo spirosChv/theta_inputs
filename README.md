@@ -43,6 +43,31 @@ Params:
 - `f_theta`: theta cycle frequency in Hz.
 - `phi_theta`: theta cycle phase in radians.
 
+```python
+spikes = bursting_spikes(rate,
+                         nrun,
+                         N,
+                         delay,
+                         dt,
+                         noise,
+                         burst_num,
+                         burst_len,
+                         interburst,
+                         save=True,
+                         visualize=True)
+```
+
+Params:
+- `rate`: The poisson distributed average firing rate in Hz.
+- `nrun`: the number of run (trial).
+- `N`: number of presynaptic artificial cells.
+- `delay`: delay for the stimulus to act in ms.
+- `noise`: from 0 (deterministic) to 1. How much noise in the data set.
+- `burst_num`: number of bursts.
+- `burst_len`: length of each burst in ms.
+- `interburst`: length of inter-burst interval ms.
+- `mode`: mode of burst len, either 'constant' or 'random'
+
 
 ![](figures/histogram.png)
 
