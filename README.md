@@ -1,4 +1,4 @@
-# Theta modulated Poisson distributed spike trains
+# Theta modulated Poisson distributed spike trains and Burst-like spike trains
 
 To run the file execute the given python script.
 
