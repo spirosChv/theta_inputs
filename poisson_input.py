@@ -8,8 +8,124 @@ Created on Sun Mar 14 09:37:20 2021.
 
 import os
 import brian2
+import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+def poisson_spikes(time, N, rate=10, dt=0.1, seed=0):
+    """
+    Poisson spike generator.
+
+    Parameters
+    ----------
+    time : float
+        Simulation time in miliseconds (ms).
+    N : int, optional
+        Number of presynaptic spikes.
+    rate : float, optional
+        Mean firing rate in Hz. The default is 10.
+    dt : float, optional
+        Time step in ms. The default is 0.1.
+    seed : int.
+        Random seed for reproducibility. The default is 0.
+
+    Returns
+    -------
+    spks : TYPE
+        DESCRIPTION.
+
+    """
+    # Random seed for reproducibility.
+    np.random.seed(seed)
+    spks = []
+    tarray = np.arange(0, time, dt)
+    for n in range(N):
+        spkt = tarray[np.random.rand(len(tarray)) < rate*dt/1000.]  # Determine list of times of spikes
+        idx = [n]*len(spkt)  # Create vector for neuron ID number the same length as time
+        spkn = np.concatenate([[idx], [spkt]], axis=0).T  # Combine tw lists
+        if len(spkn) > 0:
+            spks.append(spkn)
+    spks = np.concatenate(spks, axis=0)
+    return spks
+
+
+def bursting_spikes(rate, nrun, N, time, delay, dt=0.1,
+                    noise=0.0, f_theta=8, phi_theta=0,
+                    save=False, visualize=False,
+                    fname='cell_'):
+    """
+    Theta-modulated Poisson spike train.
+
+    Parameters
+    ----------
+    rate : float
+        Poisson-distribution mean firing rate (lambda) in Hz.
+    nrun : int
+        Simulated run. Determines the seed.
+    N : int
+        Number of pre-synaptic artificial cells.
+    time : float
+        Simulation time in miliseconds (ms).
+    delay : float
+        Delay in miliseconds (ms). This shifts forward in time all spike times.
+    dt : float
+        Time step (ms).
+    noise : float, optional
+        Range 0 to 1. Fractional randomness. 0: deterministic, 1: intervals
+        have poisson distribution. The default is 0.0.
+    f_theta : float, optional
+        Theta-cycle frequency in Hz. The default is 8.
+    phi_theta : float, optional
+        Theta-cycle phase in radians. The default is 0.
+    save : bool, optional
+        Either to save or not the spike times in txt files.
+        The default is False.
+    visualize : bool, optional
+        Either to visualize the spike train or not. The default is False.
+    fname : str, optional
+        Filename keyword of each artificial cell. The default is 'cell_'.
+
+    Returns
+    -------
+    spikes_train : dict
+        Dictionary with the pre-synaptic spike trains.
+        keys: 'neuron_i', i-th presynaptic artificial cell.
+    """
+    # Random seed for reproducibility.
+    np.random.seed(nrun)
+
+    print(f'RUN: {nrun}')
+
+    # Create the folder to store the outputs.
+    if save:
+        foldername = pathlib.Path(f'rate{rate}/run_{nrun}')
+        os.makedirs(foldername, exist_ok=True)
+
+    spiketimes = poisson_spikes(time, N, rate, dt, seed=nrun)
+
+    spike_train = {}
+    for s in range(spiketimes.shape[1]):
+        # Spike times in ms
+        spikes = np.round(spiketimes[spiketimes[:,0]==1][:,1], 1)
+        # Add a `delay` in ms in the spiketimes.
+        spikes = delay + spikes
+        # Remove all occurences of elements with value greater than the time.
+        spikes = spikes[spikes <= time]
+        if save:
+            # Write the spike in a text document.
+            np.savetxt(f"{foldername}/{fname}{s}.txt",
+                       spikes,
+                       fmt='%10.1f',
+                       newline='\n')
+
+        spike_train[f"neuron_{s}"] = spikes
+
+    if visualize:
+        plot_spikes(spike_train, N, time, delay, f_theta, phi_theta,
+                    ids=N, fname='cell_')
+
+    return spike_train
 
 
 def theta_prob(spike, f_theta, phi_theta):
@@ -74,7 +190,6 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
     spikes_train : dict
         Dictionary with the pre-synaptic spike trains.
         keys: 'neuron_i', i-th presynaptic artificial cell.
-
     """
     # Random seed for reproducibility.
     brian2.seed(nrun)
@@ -84,7 +199,7 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
 
     # Create the folder to store the outputs.
     if save:
-        foldername = f'rate{rate}/run_{nrun}'
+        foldername = pathlib.Path(f'rate{rate}/run_{nrun}')
         os.makedirs(foldername, exist_ok=True)
 
     time_input = time * brian2.ms  # simulation time
@@ -199,13 +314,14 @@ def plot_spikes(spike_train, neurons, time, delay, f_theta, phi_theta,
 
 
 if __name__ == '__main__':
-    spikes = theta_filtered_spikes(rate=12,
-                                   nrun=1,
-                                   N=1000,
-                                   time=2000,
-                                   delay=400,
-                                   noise=0.0,
-                                   f_theta=8,
-                                   phi_theta=0,
-                                   save=True,
-                                   visualize=True)
+    spikes = bursting_spikes(rate=40,
+                             nrun=1,
+                             N=50,
+                             time=2000,
+                             delay=400,
+                             dt=0.1,
+                             noise=0.0,
+                             f_theta=8,
+                             phi_theta=0,
+                             save=True,
+                             visualize=True)
