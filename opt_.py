@@ -49,6 +49,49 @@ def my_style():
     return my_style
 
 
+def gridfield(theta, lambda_var, xo, yo, x, y):
+    """
+    Generate grid-like fields in a specific location.
+    Parameters
+    ----------
+    theta : float
+        DESCRIPTION.
+    lambda_var : float
+        DESCRIPTION.
+    xo : int
+        x-coordinate of the place field.
+    yo : int
+        y-coordinate of the place field.
+    x : int
+        x point in space.
+    y : int
+        y point in space.
+    Returns
+    -------
+    g : float
+        firing probability at point x, y based on place field (xo, yo).
+    """
+    th1 = np.array([np.cos(theta), np.sin(theta)]).reshape(-1, 1)
+    th2 = np.array(
+        [np.cos(theta + np.pi/3), np.sin(theta + np.pi/3)]).reshape(-1, 1)
+    th3 = np.array([np.cos(theta + 2*np.pi/3),
+                    np.sin(theta + 2*np.pi/3)]).reshape(-1, 1)
+
+    x -= xo
+    y -= yo
+
+    y /= float(lambda_var)
+    x /= float(lambda_var)
+
+    p = np.array([x, y]).reshape(-1, 1)
+
+    g = (1/4.5) * (np.cos(np.dot(p.T, th1)) +
+                   np.cos(np.dot(p.T, th2)) + np.cos(np.dot(p.T, th3)) +
+                   1.5).item()
+
+    return g
+
+
 def visualize_inputs(field, probabilities, dim):
     """
     Visualize the theoretical input priobabilities.
@@ -249,3 +292,29 @@ def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
     Zmean = np.divide(Zsmoothed, time_array_fil)
 
     return Zmean
+
+
+def visualize_spiketimes(spikelist, opt='CA3 inputs'):
+    """
+    Raster plot with the spike times.
+
+    Parameters
+    ----------
+    spikelist : list
+        Presynaptic cells' spiketimes.
+    opt : str
+        Define the type of inputs. The default is `CA3 inputs`.
+
+    Returns
+    -------
+    None.
+
+    """
+    plt.style.use(my_style())      
+    plt.figure()
+    for i, spk in enumerate(spikelist):
+        plt.scatter(spk, np.ones((len(spk)))*i, color='k')
+    plt.ylabel('cell ID')
+    plt.xlabel('time (ms)')
+    plt.title(opt)
+    plt.show()
