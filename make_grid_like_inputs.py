@@ -11,8 +11,8 @@ Modified on Thu Apr 14 11:21:21 2022 to account for place-like generation.
 import os
 import numpy as np
 from pathlib import Path
-from gridfield import gridfield
-from opt_ import visualize_inputs
+from opt_ import visualize_inputs, gridfield
+from poisson_input import poisson_spikes
 
 # Choose coordinates +1 for the value
 # e.g., if you want 100 --> myx = 101
@@ -22,7 +22,7 @@ from opt_ import visualize_inputs
 my_run = 1
 np.random.seed(my_run)
 
-visulaize = False
+visualize = False
 ###############################################################################
 ################# P A T H   C O N S T R U C T I O N  ##########################
 ###############################################################################
@@ -32,7 +32,7 @@ xlim = 200  # Choose +1 the points you want (apart from 1)
 ylim = 1
 
 # Place field coordinations; all to all combinations
-x_array = range(0, xlim, 5)  # x-coordinates of place field
+x_array = [100]  # range(0, xlim, 5)  # x-coordinates of place field
 y_array = [1]  # y-coordinates of place field
 
 print(f'Simulating RUN... {my_run}\n')
@@ -124,13 +124,13 @@ nsynEC = 20  # Number of presynaptic cells per place field
 nsynCA3 = 20  # Number of presynaptic cells per place field
 noiseEC = 0.001  # noise levels
 noiseCA3 = 0.001  # noise levels
+jitterEC = 0.2  # jitter in EC spiketimes
+jitterCA3 = 0.2  # jitter in CA3 spiketimes
 
 theta_freq = 8  # in Hz
 theta_phase = 0  # in degrees
 
 my_field = 0
-
-
 d_all = {}
 for xxx in x_array:
     for yyy in y_array:
@@ -160,6 +160,8 @@ for xxx in x_array:
                     d[ni, x, y] = gridfield(angle, lambda_var, xxx, yyy, x, y)
 
         for ni in range(nsynEC):
+            rate = np.random.choice(np.arange(80, 120))
+            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1, seed=(my_run+1)*ni)[:, 1]
             dd += d[ni, :, :]
             spikes = []
             for i in range(len(path)):  # i is time
@@ -170,7 +172,7 @@ for xxx in x_array:
                                        i/1000.0 + theta_phase)+1.0)/2.0
 
                 r_ = np.random.rand()
-                if ((probability > 0.7) and (r_ < probability / 2.0)) or (r_ < noiseEC):
+                if (i in all_spikes) and (((probability > 0.8) and (r_ < probability / 4.0)) or (r_ < noiseEC)):
 
                     # spikes is a vector with the locations/timespots
                     # where there is a spike
@@ -182,9 +184,11 @@ for xxx in x_array:
                 if sp - spikes_modified[-1] > tref:
                     spikes_modified.append(sp)
 
-            spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1)
+            spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
+            spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterEC
+            print(f'spikes of {ni}: {len(spikes_modified)}, rate: {rate}')
             fname_grid = Path(f'{folder_grid}/s{ni}.txt')
-            np.savetxt(fname_grid, spikes_modified, fmt='%.0d', delimiter=' ')
+            np.savetxt(fname_grid, spikes_modified, fmt='%.2d', delimiter=' ')
         
         # Store all probabilities on a vector
         d_all[f'place_field_{my_field}'] = d
@@ -196,6 +200,8 @@ for xxx in x_array:
         dd = np.zeros((xlim, ylim))
         r_delay = np.random.randn()*sigma_ca3
         for ni in range(nsynCA3):
+            rate = np.random.choice(np.arange(25, 50))
+            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1, seed=(my_run+1000)*ni)[:, 1]
             dd += d[ni, :, :]
             spikes = []
             for i in range(len(path)):  # i is time
@@ -206,7 +212,7 @@ for xxx in x_array:
                                        i/1000.0 + theta_phase)+1.0)/2.0
 
                 r_ = np.random.rand()
-                if probability > 0.85 or r_ < noiseCA3:
+                if (i in all_spikes) and (((probability > 0.85) and (r_ < probability / 4.0)) or (r_ < noiseCA3)):
 
                     # spikes is a vector with the locations/timespots
                     # where there is a spike
@@ -218,13 +224,14 @@ for xxx in x_array:
             for sp in spikes:
                 if sp - spikes_modified[-1] > tref:
                     spikes_modified.append(sp)
-
-            spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1)
+            
+            spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
+            spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterCA3
             fname_place = Path(f'{folder_place}/c{ni}.txt')
-            np.savetxt(fname_place, spikes_modified, fmt='%.0d', delimiter=' ')         
+            np.savetxt(fname_place, spikes_modified, fmt='%.2d', delimiter=' ')         
 
         print(f'Done with Grid- and Place-like cells in field {my_field}')
 
 
-if visulaize:
-    visualize_inputs(field=10, probabilities=d_all, dim=(4, 5))
+if visualize:
+    visualize_inputs(field=1, probabilities=d_all, dim=(4, 5))
