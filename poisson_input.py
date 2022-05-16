@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def poisson_spikes(t1, t2, N, rate=10, dt=0.1, seed=0):
+def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
     """
     Poisson spike generator.
 
@@ -29,8 +29,6 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1, seed=0):
         Mean firing rate in Hz. The default is 10.
     dt : float, optional
         Time step in ms. The default is 0.1.
-    seed : int.
-        Random seed for reproducibility. The default is 0.
 
     Returns
     -------
@@ -38,8 +36,6 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1, seed=0):
         DESCRIPTION.
 
     """
-    # Random seed for reproducibility.
-    np.random.seed(seed)
     spks = []
     tarray = np.arange(t1, t2+dt, dt)
     for n in range(N):
@@ -64,7 +60,7 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
     rate : float
         Poisson-distribution mean firing rate (lambda) in Hz.
     nrun : int
-        Simulated run. Determines the seed.
+        Simulated run.
     N : int
         Number of pre-synaptic artificial cells.
     delay : float
@@ -96,9 +92,6 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
         Dictionary with the pre-synaptic spike trains.
         keys: 'neuron_i', i-th presynaptic artificial cell.
     """
-    # Random seed for reproducibility.
-    np.random.seed(nrun)
-
     print(f'RUN: {nrun}')
 
     # Create the folder to store the outputs.
@@ -113,8 +106,8 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
         t1 = t3
         t2 = t1 + burst_len
         t3 = t2 + interburst
-        spks = poisson_spikes(t1, t2, N, rate, dt, seed=200*(nrun+i))
-        spks_noise = poisson_spikes(t2, t3, N, rate, dt, seed=500*(nrun+i))
+        spks = poisson_spikes(t1, t2, N, rate, dt)
+        spks_noise = poisson_spikes(t2, t3, N, rate, dt)
         spks_added = spks_noise[np.random.rand(spks_noise.shape[0]) < noise, :]
         spks = np.concatenate([spks, spks_added], axis=0)
         if i == 0:
@@ -180,7 +173,7 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
     rate : float
         Poisson-distribution mean firing rate (lambda) in Hz.
     nrun : int
-        Simulated run. Determines the seed.
+        Simulated run.
     N : int
         Number of pre-synaptic artificial cells.
     time : float
@@ -210,7 +203,6 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
     """
     # Random seed for reproducibility.
     brian2.seed(nrun)
-    np.random.seed(nrun)
 
     print(f'RUN: {nrun}')
 
