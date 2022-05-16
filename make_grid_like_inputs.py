@@ -11,7 +11,7 @@ Modified on Thu Apr 14 11:21:21 2022 to account for place-like generation.
 import os
 import numpy as np
 from pathlib import Path
-from opt_ import visualize_inputs, gridfield
+from opt_ import visualize_inputs, visualize_spiketimes, gridfield
 from poisson_input import poisson_spikes
 
 # Choose coordinates +1 for the value
@@ -132,6 +132,7 @@ theta_phase = 0  # in degrees
 
 my_field = 0
 d_all = {}
+spikesEC, spikesCA3 = [], []
 for xxx in x_array:
     for yyy in y_array:
 
@@ -161,7 +162,7 @@ for xxx in x_array:
 
         for ni in range(nsynEC):
             rate = np.random.choice(np.arange(80, 120))
-            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1, seed=(my_run+1)*ni)[:, 1]
+            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1)[:, 1]
             dd += d[ni, :, :]
             spikes = []
             for i in range(len(path)):  # i is time
@@ -186,6 +187,7 @@ for xxx in x_array:
 
             spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
             spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterEC
+            spikesEC.append(spikes_modified)
             print(f'spikes of {ni}: {len(spikes_modified)}, rate: {rate}')
             fname_grid = Path(f'{folder_grid}/s{ni}.txt')
             np.savetxt(fname_grid, spikes_modified, fmt='%.2d', delimiter=' ')
@@ -201,7 +203,7 @@ for xxx in x_array:
         r_delay = np.random.randn()*sigma_ca3
         for ni in range(nsynCA3):
             rate = np.random.choice(np.arange(25, 50))
-            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1, seed=(my_run+1000)*ni)[:, 1]
+            all_spikes = poisson_spikes(0, len(path), N=1, rate=rate, dt=1)[:, 1]
             dd += d[ni, :, :]
             spikes = []
             for i in range(len(path)):  # i is time
@@ -227,6 +229,7 @@ for xxx in x_array:
             
             spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
             spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterCA3
+            spikesCA3.append(spikes_modified)
             fname_place = Path(f'{folder_place}/c{ni}.txt')
             np.savetxt(fname_place, spikes_modified, fmt='%.2d', delimiter=' ')         
 
@@ -235,3 +238,5 @@ for xxx in x_array:
 
 if visualize:
     visualize_inputs(field=1, probabilities=d_all, dim=(4, 5))
+    visualize_spiketimes(spikesCA3, opt='CA3 inputs')
+    visualize_spiketimes(spikesEC, opt='EC inputs')
