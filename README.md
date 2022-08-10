@@ -2,7 +2,7 @@
 
 To run the file execute the given python script.
 
-Requirements: matplotlib, numpy, and [brian2](https://brian2.readthedocs.io/en/stable/)
+Requirements: matplotlib, numpy
 
 In case you do not have these packages, execute:
 
