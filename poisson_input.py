@@ -7,7 +7,6 @@ Created on Sun Mar 14 09:37:20 2021.
 """
 
 import os
-import brian2
 import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,7 +40,7 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
     for n in range(N):
         spkt = tarray[np.random.rand(len(tarray)) < rate*dt/1000.]  # Determine list of times of spikes
         idx = [n]*len(spkt)  # Create vector for neuron ID number the same length as time
-        spkn = np.concatenate([[idx], [spkt]], axis=0).T  # Combine tw lists
+        spkn = np.concatenate([[idx], [spkt]], axis=0).T  # Combine the lists
         if len(spkn) > 0:
             spks.append(spkn)
     spks = np.concatenate(spks, axis=0)
@@ -118,7 +117,7 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
     spike_train = {}
     for s in range(N):
         # Spike times in ms
-        spikes = np.round(spiketimes[spiketimes[:,0]==s][:,1], 1)
+        spikes = np.round(spiketimes[spiketimes[:, 0] == s][:, 1], 1)
         # Add a `delay` in ms in the spiketimes.
         spikes = delay + spikes
         # Remove all occurences of elements with value greater than the time.
@@ -163,7 +162,7 @@ def theta_prob(spike, f_theta, phi_theta):
 
 def theta_filtered_spikes(rate, nrun, N, time, delay,
                           noise=0.0, f_theta=8, phi_theta=0,
-                          save=False, visualize=False,
+                          dt=0.1, save=False, visualize=False,
                           fname='cell_'):
     """
     Theta-modulated Poisson spike train.
@@ -187,6 +186,8 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         Theta-cycle frequency in Hz. The default is 8.
     phi_theta : float, optional
         Theta-cycle phase in radians. The default is 0.
+    dt : float, optional
+        Time integration step in miliseconds. The default in 0.1.
     save : bool, optional
         Either to save or not the spike times in txt files.
         The default is False.
@@ -202,7 +203,7 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         keys: 'neuron_i', i-th presynaptic artificial cell.
     """
     # Random seed for reproducibility.
-    brian2.seed(nrun)
+    np.random.seed(nrun)
 
     print(f'RUN: {nrun}')
 
@@ -210,21 +211,17 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
     if save:
         foldername = pathlib.Path(f'rate{rate}/run_{nrun}')
         os.makedirs(foldername, exist_ok=True)
-
-    time_input = time * brian2.ms  # simulation time
-    P = brian2.PoissonGroup(N, rates=rate * brian2.Hz)
-    S = brian2.SpikeMonitor(P)
-
-    # Run the simulation
-    brian2.run(time_input, report='text', report_period=10 * brian2.second)
+    
+    # Produce the poisson distributed spikes
+    spiketimes = poisson_spikes(t1=0, t2=time, N=N, rate=rate, dt=dt)
 
     spike_train = {}
-    for s in range(len(S.spike_trains().keys())):
+    for s in range(N):
         # Spike times in ms
-        spiketimes = np.round(1000*S.spike_trains()[s]/brian2.second, 1)
+        spikes_neuron = np.round(spiketimes[spiketimes[:, 0] == s][:, 1], 1)
         # Make the spike train theta modulated
         spikes = []
-        for spike in spiketimes:
+        for spike in spikes_neuron:
             p = theta_prob(spike, f_theta, phi_theta)
             r_ = np.random.rand()
             if ((p > 0.7) and (r_ < p / 2.0)) or np.random.rand() < noise:
@@ -386,11 +383,11 @@ if __name__ == '__main__':
                              nrun=2,
                              N=50,
                              delay=400,
-                             dt=0.01,
+                             dt=0.1,
                              noise=0.1,
                              burst_num=10,
                              burst_len=50,
                              interburst=150,
                              mode='random',
-                             save=True,
+                             save=False,
                              visualize=True)
