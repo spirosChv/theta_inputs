@@ -32,7 +32,7 @@ xlim = 200  # Choose +1 the points you want (apart from 1)
 ylim = 1
 
 # Place field coordinations; all to all combinations
-x_array = [100]  # range(0, xlim, 5)  # x-coordinates of place field
+x_array = range(0, xlim, 5)  # x-coordinates of place field
 y_array = [1]  # y-coordinates of place field
 
 print(f'Simulating RUN... {my_run}\n')
@@ -122,8 +122,8 @@ sigma_ca3 = 2  # sigma of randomness in ca3 delay in ms for different ca3 cells
 sigma_cell = 0.33  # extra randomness for the same presynaptic cell normal with sigma 0.33, [-0.99, 0.99]
 nsynEC = 20  # Number of presynaptic cells per place field
 nsynCA3 = 20  # Number of presynaptic cells per place field
-noiseEC = 0.001  # noise levels
-noiseCA3 = 0.001  # noise levels
+noiseEC = 0.01  # noise levels
+noiseCA3 = 0.01  # noise levels
 jitterEC = 0.2  # jitter in EC spiketimes
 jitterCA3 = 0.2  # jitter in CA3 spiketimes
 
@@ -140,7 +140,7 @@ for xxx in x_array:
         folder_grid = Path(f'{dirname_grid}/place_field_{my_field}')
         if not os.path.exists(folder_grid):
             os.makedirs(folder_grid)
-        
+
         folder_place = Path(f'{dirname_place}/place_field_{my_field}')
         if not os.path.exists(folder_place):
             os.makedirs(folder_place)
@@ -173,7 +173,7 @@ for xxx in x_array:
                                        i/1000.0 + theta_phase)+1.0)/2.0
 
                 r_ = np.random.rand()
-                if (i in all_spikes) and (((probability > 0.8) and (r_ < probability / 4.0)) or (r_ < noiseEC)):
+                if (i in all_spikes) and (((probability > 0.70) and (r_ < probability / 2.0)) or (r_ < noiseEC)):
 
                     # spikes is a vector with the locations/timespots
                     # where there is a spike
@@ -188,10 +188,12 @@ for xxx in x_array:
             spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
             spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterEC
             spikesEC.append(spikes_modified)
-            print(f'spikes of {ni}: {len(spikes_modified)}, rate: {rate}')
-            fname_grid = Path(f'{folder_grid}/s{ni}.txt')
+            print(f'Grid-like spikes of {ni}: {len(spikes_modified)}, rate: {rate}')
+            fname_grid = Path(f'{folder_grid}/cell_{ni}.txt')
+            if len(spikes_modified) == 0:
+                spikes_modified = [1.]
             np.savetxt(fname_grid, spikes_modified, fmt='%.2d', delimiter=' ')
-        
+
         # Store all probabilities on a vector
         d_all[f'place_field_{my_field}'] = d
 
@@ -214,7 +216,7 @@ for xxx in x_array:
                                        i/1000.0 + theta_phase)+1.0)/2.0
 
                 r_ = np.random.rand()
-                if (i in all_spikes) and (((probability > 0.85) and (r_ < probability / 4.0)) or (r_ < noiseCA3)):
+                if (i in all_spikes) and (((probability > 0.70) and (r_ < probability / 2.0)) or (r_ < noiseCA3)):
 
                     # spikes is a vector with the locations/timespots
                     # where there is a spike
@@ -226,12 +228,15 @@ for xxx in x_array:
             for sp in spikes:
                 if sp - spikes_modified[-1] > tref:
                     spikes_modified.append(sp)
-            
+
             spikes_modified = np.array(spikes_modified[1:]).reshape(-1, 1).astype('float')
             spikes_modified += np.random.randn(spikes_modified.shape[0], spikes_modified.shape[1])*jitterCA3
             spikesCA3.append(spikes_modified)
-            fname_place = Path(f'{folder_place}/c{ni}.txt')
-            np.savetxt(fname_place, spikes_modified, fmt='%.2d', delimiter=' ')         
+            fname_place = Path(f'{folder_place}/cell_{ni}.txt')
+            print(f'Place-like spikes of {ni}: {len(spikes_modified)}, rate: {rate}')
+            if len(spikes_modified) == 0:
+                spikes_modified = [1.]
+            np.savetxt(fname_place, spikes_modified, fmt='%.2d', delimiter=' ')
 
         print(f'Done with Grid- and Place-like cells in field {my_field}')
 

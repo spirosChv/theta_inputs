@@ -211,7 +211,7 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
     if save:
         foldername = pathlib.Path(f'rate{rate}/run_{nrun}')
         os.makedirs(foldername, exist_ok=True)
-    
+
     # Produce the poisson distributed spikes
     spiketimes = poisson_spikes(t1=0, t2=time, N=N, rate=rate, dt=dt)
 
@@ -389,5 +389,5 @@ if __name__ == '__main__':
                              burst_len=50,
                              interburst=150,
                              mode='random',
-                             save=False,
+                             save=True,
                              visualize=True)

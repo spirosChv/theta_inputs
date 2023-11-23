@@ -114,14 +114,13 @@ def visualize_inputs(field, probabilities, dim):
     plt.style.use(my_style())    
 
     # Adopted from https://github.com/BIDS/colormap/blob/master/parula.py
-    cm_data = np.loadtxt('parula.txt')
-    parula_map = LinearSegmentedColormap.from_list('parula', cm_data)
+    #cm_data = np.loadtxt('parula.txt')
+    #parula_map = LinearSegmentedColormap.from_list('parula', cm_data)
 
     probs = probabilities[f'place_field_{field}']
     fig, axes = plt.subplots(nrows=dim[0], ncols=dim[1], figsize=(12, 8))
     for cnt, ax in enumerate(axes.flat):
         im = ax.imshow(probs[cnt, :, :].reshape(1, -1),
-                       cmap=parula_map,
                        extent=[0, 100, 0, 0.2],
                        aspect=100,
                        vmin=0, vmax=1)
@@ -136,7 +135,6 @@ def visualize_inputs(field, probabilities, dim):
     plt.figure()
     probs_pc = np.sum(probs, axis=0, keepdims=True)
     plt.imshow(probs_pc.T/np.max(probs_pc),
-               cmap=parula_map,
                extent=[0, 100, 0, 0.2],
                aspect=100,
                vmin=0, vmax=1)
