@@ -152,22 +152,22 @@ def binning(a, N, method):
 
     Parameters
     ----------
-    a : TYPE
-        DESCRIPTION.
-    N : TYPE
-        DESCRIPTION.
-    method : TYPE
-        DESCRIPTION.
+    a : numpy.ndarray
+        The input array.
+    N : int
+        Number of bins.
+    method : str
+        The method of binning to be applied.
 
     Raises
     ------
     ValueError
-        DESCRIPTION.
+        If N is not int.
 
     Returns
     -------
-    TYPE
-        DESCRIPTION.
+    numpy.ndarray
+        The binned array.
 
     """
     if not isinstance(N, int):
@@ -202,19 +202,19 @@ def spike_map(spiketimes, csum, npath_x, npath_y):
 
     Parameters
     ----------
-    spiketimes : TYPE
-        DESCRIPTION.
+    spiketimes : numpy.ndarray
+        Array with floats represents the spike times.
     csum : TYPE
         DESCRIPTION.
-    npath_x : TYPE
-        DESCRIPTION.
-    npath_y : TYPE
-        DESCRIPTION.
+    npath_x : int
+        The x-axis lim.
+    npath_y : int
+        The y-axis lim (for 2D spaces).
 
     Returns
     -------
-    Z : TYPE
-        DESCRIPTION.
+    Z : numpy.ndarray
+        The array of spikes in space.
 
     """
     Z = np.zeros((npath_x, npath_y))
@@ -247,9 +247,9 @@ def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
 
     Parameters
     ----------
-    path : np.ndarray
+    path : numpy.ndarray
         Two dimensional array of the coordinates.
-    spiketimes : np.ndarray
+    spiketimes : numpy.ndarray
         Spike-times in ms.
     xlim : int, optional
         The x limit of the track (length). The default is 200.
@@ -260,8 +260,8 @@ def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
 
     Returns
     -------
-    Zmean : np.ndarray
-        Heatmap with the firing rate as function of the position.
+    Zmean : numpy.ndarray
+        Heatmap with the firing rate as a function of the position.
 
     """
 
