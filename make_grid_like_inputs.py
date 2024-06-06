@@ -120,7 +120,7 @@ tref = 3  # refractoriness of presynaptic cells in ms
 tca3_delay = 17  # delay of ca3 signal in ms
 sigma_ca3 = 2  # sigma of randomness in ca3 delay in ms for different ca3 cells
 sigma_cell = 0.33  # extra randomness for the same presynaptic cell normal with sigma 0.33, [-0.99, 0.99]
-nsynEC = 20  # Number of presynaptic cells per place field
+nsynEC = 10  # Number of presynaptic cells per place field
 nsynCA3 = 20  # Number of presynaptic cells per place field
 noiseEC = 0.01  # noise levels
 noiseCA3 = 0.01  # noise levels
@@ -194,13 +194,17 @@ for xxx in x_array:
                 spikes_modified = [1.]
             np.savetxt(fname_grid, spikes_modified, fmt='%.2d', delimiter=' ')
 
-        # Store all probabilities on a vector
+        # Store all probabilities on a vector for visualization purposes
         d_all[f'place_field_{my_field}'] = d
 
         # PLACE-LIKE PROBABILITIES AND SPIKES
-        # d is the x,y point of the grid field of dend ni
+
+        # probabilites of ca3 spikes based on grid cells
         d_ca3 = np.sum(d, axis=0)
         d_normed = d_ca3/np.max(d_ca3)
+
+        # d is the x,y point of the grid field of dend ni
+        d = np.zeros((nsynCA3, xlim, ylim))
         dd = np.zeros((xlim, ylim))
         r_delay = np.random.randn()*sigma_ca3
         for ni in range(nsynCA3):
@@ -242,6 +246,6 @@ for xxx in x_array:
 
 
 if visualize:
-    visualize_inputs(field=1, probabilities=d_all, dim=(4, 5))
+    visualize_inputs(field=1, probabilities=d_all, dim=(2, 5))
     visualize_spiketimes(spikesCA3, opt='CA3 inputs')
     visualize_spiketimes(spikesEC, opt='EC inputs')

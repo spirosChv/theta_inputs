@@ -276,9 +276,9 @@ def plot_spikes(spike_train, neurons, time, delay, f_theta, phi_theta,
 
     """
     # color pallette.
-    plt.style.use("seaborn-colorblind")
+    # plt.style.use("seaborn-colorblind")
     # load the custom style.
-    plt.style.use('style_.txt')
+    # plt.style.use('style_.txt')
 
     plt.figure(figsize=(12, 10))
     random_idx = np.random.choice(range(neurons), size=ids, replace=False)
@@ -343,9 +343,9 @@ def plot_bursts(spike_train, neurons, time, delay, ids, fname='cell_'):
 
     """
     # color pallette.
-    plt.style.use("seaborn-colorblind")
+    # plt.style.use("seaborn-colorblind")
     # load the custom style.
-    plt.style.use('style_.txt')
+    # plt.style.use('style_.txt')
 
     plt.figure(figsize=(12, 10))
     random_idx = np.random.choice(range(neurons), size=ids, replace=False)
@@ -379,13 +379,13 @@ def plot_bursts(spike_train, neurons, time, delay, ids, fname='cell_'):
 
 
 if __name__ == '__main__':
-    spikes = bursting_spikes(rate=40,
+    spikes = bursting_spikes(rate=15,
                              nrun=2,
                              N=50,
                              delay=400,
                              dt=0.1,
                              noise=0.1,
-                             burst_num=10,
+                             burst_num=100,
                              burst_len=50,
                              interburst=150,
                              mode='random',
