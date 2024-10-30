@@ -21,16 +21,18 @@ Recommendation: run under anaconda on a fresh environment.
 The parameters are:
 
 ```python
-spikes = theta_filtered_spikes(rate,
-                               nrun,
-                               N,
-                               time,
-                               delay,
-                               noise,
-                               f_theta,
-                               phi_theta,
-                               save=True,
-                               visualize=True)
+spikes = theta_filtered_spikes(
+	rate,
+        nrun,
+	N,
+	time,
+	delay,
+	noise,
+	f_theta,
+	phi_theta,
+	save=True,
+	visualize=True
+)
 ```
 
 Params:
@@ -44,17 +46,19 @@ Params:
 - `phi_theta`: theta cycle phase in radians.
 
 ```python
-spikes = bursting_spikes(rate,
-                         nrun,
-                         N,
-                         delay,
-                         dt,
-                         noise,
-                         burst_num,
-                         burst_len,
-                         interburst,
-                         save=True,
-                         visualize=True)
+spikes = bursting_spikes(
+	rate,
+	nrun,
+	N,
+	delay,
+	dt,
+	noise,
+	burst_num,
+	burst_len,
+	interburst,
+	save=True,
+	visualize=True
+)
 ```
 
 Params:

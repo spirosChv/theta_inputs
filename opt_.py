@@ -71,11 +71,24 @@ def gridfield(theta, lambda_var, xo, yo, x, y):
     g : float
         firing probability at point x, y based on place field (xo, yo).
     """
-    th1 = np.array([np.cos(theta), np.sin(theta)]).reshape(-1, 1)
+    th1 = np.array(
+        [
+        np.cos(theta),
+        np.sin(theta)
+        ]
+    ).reshape(-1, 1)
     th2 = np.array(
-        [np.cos(theta + np.pi/3), np.sin(theta + np.pi/3)]).reshape(-1, 1)
-    th3 = np.array([np.cos(theta + 2*np.pi/3),
-                    np.sin(theta + 2*np.pi/3)]).reshape(-1, 1)
+        [
+        np.cos(theta + np.pi/3),
+        np.sin(theta + np.pi/3)
+        ]
+    ).reshape(-1, 1)
+    th3 = np.array(
+        [
+        np.cos(theta + 2*np.pi/3),
+        np.sin(theta + 2*np.pi/3)
+        ]
+    ).reshape(-1, 1)
 
     x -= xo
     y -= yo
@@ -111,7 +124,7 @@ def visualize_inputs(field, probabilities, dim):
     None.
 
     """
-    plt.style.use(my_style())    
+    plt.style.use(my_style())
 
     # Adopted from https://github.com/BIDS/colormap/blob/master/parula.py
     #cm_data = np.loadtxt('parula.txt')
@@ -241,7 +254,7 @@ def spike_map(spiketimes, csum, npath_x, npath_y):
     return Z
 
 
-def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
+def make_maps(path, spiketimes, xlim=200, ylim=1, num_bins=100):
     """
     Make spatial maps from spiketimes.
 
@@ -255,7 +268,7 @@ def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
         The x limit of the track (length). The default is 200.
     ylim : int, optional
         The y limit of the track (width). The default is 1.
-    nBins : int, optional
+    num_bins : int, optional
         The number of bins. The default is 100.
 
     Returns
@@ -269,30 +282,37 @@ def make_maps(path, spiketimes, xlim=200, ylim=1, nBins=100):
     csum = np.cumsum(time_array)
 
     Z = spike_map(spiketimes, csum, npath_x=xlim, npath_y=ylim)
-    Zbinned = binning(Z, N=nBins, method='summing')
+    Zbinned = binning(Z, N=num_bins, method='summing')
 
     # Gaussian filter parameters
-    sigma_c = 5.0/(xlim/nBins)
-    truncate_c = 30.0/(xlim/nBins)
+    sigma_c = 5.0/(xlim/num_bins)
+    truncate_c = 30.0/(xlim/num_bins)
 
     time_array_sec = (time_array/1000.0).reshape(Z.shape)
-    time_binned = binning(time_array_sec, nBins, 'summing')
+    time_binned = binning(time_array_sec, num_bins, method='summing')
 
     # Gaussian smoothing
-    time_array_fil = gaussian_filter1d(time_binned, axis=0,
-                                       sigma=sigma_c,
-                                       mode='nearest',
-                                       truncate=truncate_c)
+    time_array_filtered = gaussian_filter1d(
+        time_binned, axis=0,
+        sigma=sigma_c,
+        mode='nearest',
+        truncate=truncate_c
+    )
 
-    Zsmoothed = gaussian_filter1d(Zbinned, axis=0, sigma=sigma_c,
-                                  mode='nearest', truncate=truncate_c)
+    Z_filtered = gaussian_filter1d(
+        Zbinned,
+        axis=0,
+        sigma=sigma_c,
+        mode='nearest',
+        truncate=truncate_c
+    )
 
-    Zmean = np.divide(Zsmoothed, time_array_fil)
+    Z_averaged = np.divide(Z_filtered, time_array_filtered)
 
-    return Zmean
+    return Z_averaged
 
 
-def visualize_spiketimes(spikelist, opt='CA3 inputs'):
+def visualize_spiketimes(spikelist, type='CA3 inputs'):
     """
     Raster plot with the spike times.
 
@@ -300,7 +320,7 @@ def visualize_spiketimes(spikelist, opt='CA3 inputs'):
     ----------
     spikelist : list
         Presynaptic cells' spiketimes.
-    opt : str
+    type : str
         Define the type of inputs. The default is `CA3 inputs`.
 
     Returns
@@ -308,11 +328,11 @@ def visualize_spiketimes(spikelist, opt='CA3 inputs'):
     None.
 
     """
-    plt.style.use(my_style())      
+    plt.style.use(my_style())
     plt.figure()
     for i, spk in enumerate(spikelist):
         plt.scatter(spk, np.ones((len(spk)))*i, color='k')
     plt.ylabel('cell ID')
     plt.xlabel('time (ms)')
-    plt.title(opt)
+    plt.title(type)
     plt.show()

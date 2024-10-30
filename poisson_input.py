@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
+def poisson_spikes(t1, t2, N, rate=10, dt=0.1, seed=None):
     """
     Poisson spike generator.
 
@@ -28,6 +28,9 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
         Mean firing rate in Hz. The default is 10.
     dt : float, optional
         Time step in ms. The default is 0.1.
+    seed : int, optional
+        The random seed value to initialize the number generation,
+        The default is None.
 
     Returns
     -------
@@ -35,10 +38,12 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
         DESCRIPTION.
 
     """
+    rng = np.random.default_rng(seed=seed)
+
     spks = []
     tarray = np.arange(t1, t2+dt, dt)
     for n in range(N):
-        spkt = tarray[np.random.rand(len(tarray)) < rate*dt/1000.]  # Determine list of times of spikes
+        spkt = tarray[rng.random(len(tarray)) < rate*dt/1000.]  # Determine list of times of spikes
         idx = [n]*len(spkt)  # Create vector for neuron ID number the same length as time
         spkn = np.concatenate([[idx], [spkt]], axis=0).T  # Combine the lists
         if len(spkn) > 0:
@@ -47,10 +52,11 @@ def poisson_spikes(t1, t2, N, rate=10, dt=0.1):
     return spks
 
 
-def bursting_spikes(rate, nrun, N, delay, dt=0.1,
-                    noise=0.0, burst_num=2, burst_len=50, interburst=150,
-                    mode='random', save=False, visualize=False,
-                    fname='cell_'):
+def bursting_spikes(
+    rate, nrun, N, delay, dt=0.1,
+    noise=0.0, burst_num=2, burst_len=50, interburst=150,
+    mode='random', save=False, visualize=False, fname='cell_'
+    ):
     """
     Theta-modulated Poisson spike train.
 
@@ -91,6 +97,8 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
         Dictionary with the pre-synaptic spike trains.
         keys: 'neuron_i', i-th presynaptic artificial cell.
     """
+    rng = np.random.default_rng(seed=nrun)
+
     print(f'RUN: {nrun}')
 
     # Create the folder to store the outputs.
@@ -101,13 +109,13 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
     t3 = 0
     for i in range(burst_num):
         if mode == 'random':
-            burst_len = np.random.randint(low=50, high=100+1)
+            burst_len = rng.integers(low=50, high=100+1)
         t1 = t3
         t2 = t1 + burst_len
         t3 = t2 + interburst
-        spks = poisson_spikes(t1, t2, N, rate, dt)
-        spks_noise = poisson_spikes(t2, t3, N, rate, dt)
-        spks_added = spks_noise[np.random.rand(spks_noise.shape[0]) < noise, :]
+        spks = poisson_spikes(t1, t2, N, rate, dt, seed=nrun)
+        spks_noise = poisson_spikes(t2, t3, N, rate, dt, seed=nrun)
+        spks_added = spks_noise[rng.random(spks_noise.shape[0]) < noise, :]
         spks = np.concatenate([spks, spks_added], axis=0)
         if i == 0:
             spiketimes = spks.copy()
@@ -121,18 +129,28 @@ def bursting_spikes(rate, nrun, N, delay, dt=0.1,
         # Add a `delay` in ms in the spiketimes.
         spikes = delay + spikes
         # Remove all occurences of elements with value greater than the time.
-        spikes = spikes[spikes <= t2+interburst]
+        spikes = spikes[spikes <= t2 + interburst]
         if save:
             # Write the spike in a text document.
-            np.savetxt(f"{foldername}/{fname}{s}.txt",
-                       spikes,
-                       fmt='%10.1f',
-                       newline='\n')
+            np.savetxt(
+                f"{foldername}/{fname}{s}.txt",
+                spikes,
+                fmt='%10.1f',
+                newline='\n'
+            )
 
         spike_train[f"neuron_{s}"] = spikes
 
     if visualize:
-        plot_bursts(spike_train, N, t2+interburst, delay, ids=N, fname='cell_')
+        plot_bursts(
+            spike_train,
+            N,
+            t2+interburst,
+            delay,
+            ids=N,
+            seed=nrun,
+            fname='cell_'
+        )
 
     return spike_train
 
@@ -160,10 +178,12 @@ def theta_prob(spike, f_theta, phi_theta):
     return p
 
 
-def theta_filtered_spikes(rate, nrun, N, time, delay,
-                          noise=0.0, f_theta=8, phi_theta=0,
-                          dt=0.1, save=False, visualize=False,
-                          fname='cell_'):
+def theta_filtered_spikes(
+        rate, nrun, N, time, delay,
+        noise=0.0, f_theta=8, phi_theta=0,
+        dt=0.1, save=False, visualize=False,
+        fname='cell_'
+    ):
     """
     Theta-modulated Poisson spike train.
 
@@ -202,9 +222,7 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         Dictionary with the pre-synaptic spike trains.
         keys: 'neuron_i', i-th presynaptic artificial cell.
     """
-    # Random seed for reproducibility.
-    np.random.seed(nrun)
-
+    rng = np.random.default_rng(seed=nrun)
     print(f'RUN: {nrun}')
 
     # Create the folder to store the outputs.
@@ -213,7 +231,14 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         os.makedirs(foldername, exist_ok=True)
 
     # Produce the poisson distributed spikes
-    spiketimes = poisson_spikes(t1=0, t2=time, N=N, rate=rate, dt=dt)
+    spiketimes = poisson_spikes(
+        t1=0,
+        t2=time,
+        N=N,
+        rate=rate,
+        dt=dt,
+        seed=nrun
+    )
 
     spike_train = {}
     for s in range(N):
@@ -223,8 +248,8 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         spikes = []
         for spike in spikes_neuron:
             p = theta_prob(spike, f_theta, phi_theta)
-            r_ = np.random.rand()
-            if ((p > 0.7) and (r_ < p / 2.0)) or np.random.rand() < noise:
+            r_ = rng.random()
+            if ((p > 0.7) and (r_ < p / 2.0)) or rng.random() < noise:
                 spikes.append(spike)
 
         # Add a `delay` in ms in the spiketimes.
@@ -233,22 +258,36 @@ def theta_filtered_spikes(rate, nrun, N, time, delay,
         spikes = spikes[spikes <= time]
         if save:
             # Write the spike in a text document.
-            np.savetxt(f"{foldername}/{fname}{s}.txt",
-                       spikes,
-                       fmt='%10.1f',
-                       newline='\n')
+            np.savetxt(
+                f"{foldername}/{fname}{s}.txt",
+                spikes,
+                fmt='%10.1f',
+                newline='\n'
+            )
 
         spike_train[f"neuron_{s}"] = spikes
 
     if visualize:
-        plot_spikes(spike_train, N, time, delay, f_theta, phi_theta,
-                    ids=N, fname='cell_')
+        plot_spikes(
+            spike_train,
+            N,
+            time,
+            delay,
+            f_theta,
+            phi_theta,
+            ids=N,
+            seed=nrun,
+            fname='cell_'
+        )
 
     return spike_train
 
 
-def plot_spikes(spike_train, neurons, time, delay, f_theta, phi_theta,
-                ids, fname='cell_'):
+def plot_spikes(
+        spike_train, neurons, time, delay,
+        f_theta, phi_theta,
+        ids, seed, fname='cell_'
+    ):
     """
     Plot spike trains.
 
@@ -275,17 +314,16 @@ def plot_spikes(spike_train, neurons, time, delay, f_theta, phi_theta,
     None.
 
     """
-    # color pallette.
-    # plt.style.use("seaborn-colorblind")
-    # load the custom style.
-    # plt.style.use('style_.txt')
+    rng = np.random.default_rng(seed=seed)
 
     plt.figure(figsize=(12, 10))
-    random_idx = np.random.choice(range(neurons), size=ids, replace=False)
+    random_idx = rng.choice(range(neurons), size=ids, replace=False)
     for i, idx in enumerate(random_idx):
-        plt.scatter(spike_train[f'neuron_{idx}'],
-                    i*np.ones_like(spike_train[f'neuron_{idx}']),
-                    color='k')
+        plt.scatter(
+            spike_train[f'neuron_{idx}'],
+            i*np.ones_like(spike_train[f'neuron_{idx}']),
+            color='k'
+        )
     plt.axvline(x=delay, color='r', linestyle='dashed', label='delay')
     plt.xlabel('time [ms]')
     plt.ylabel('pre-synaptic neuron id')
@@ -305,21 +343,34 @@ def plot_spikes(spike_train, neurons, time, delay, f_theta, phi_theta,
     prob /= np.trapz(prob, dx=0.05)
 
     plt.figure(figsize=(12, 10))
-    plt.hist(np.sort(mlist), density=True, bins=100,
-             label='spike times')
-    plt.plot(spikes, prob, linewidth=2.5, linestyle='dashed',
-             label='theta filter')
+    plt.hist(
+        np.sort(mlist),
+        density=True,
+        bins=100,
+        label='spike times'
+    )
+    plt.plot(
+        spikes,
+        prob,
+        linewidth=2.5,
+        linestyle='dashed',
+        label='theta filter'
+    )
     plt.xlabel('time [ms]')
     plt.ylabel('probability density')
     plt.xlim([0, time-delay])
-    plt.xticks(ticks=range(0, time-delay, int(time/10)),
-               labels=[str(ii+delay) for ii in range(0, time-delay,
-                                                     int(time/10))])
+    plt.xticks(
+        ticks=range(0, time-delay, int(time/10)),
+        labels=[str(ii+delay) for ii in range(0, time-delay, int(time/10))]
+    )
     plt.legend()
     plt.show()
 
 
-def plot_bursts(spike_train, neurons, time, delay, ids, fname='cell_'):
+def plot_bursts(
+        spike_train, neurons, time, delay,
+        ids, seed, fname='cell_'
+    ):
     """
     Plot spike trains.
 
@@ -343,16 +394,16 @@ def plot_bursts(spike_train, neurons, time, delay, ids, fname='cell_'):
 
     """
     # color pallette.
-    # plt.style.use("seaborn-colorblind")
-    # load the custom style.
-    # plt.style.use('style_.txt')
+    rng = np.random.default_rng(seed=seed)
 
     plt.figure(figsize=(12, 10))
-    random_idx = np.random.choice(range(neurons), size=ids, replace=False)
+    random_idx = rng.choice(range(neurons), size=ids, replace=False)
     for i, idx in enumerate(random_idx):
-        plt.scatter(spike_train[f'neuron_{idx}'],
-                    i*np.ones_like(spike_train[f'neuron_{idx}']),
-                    color='k')
+        plt.scatter(
+            spike_train[f'neuron_{idx}'],
+            i*np.ones_like(spike_train[f'neuron_{idx}']),
+            color='k'
+        )
     plt.axvline(x=delay, color='r', linestyle='dashed', label='delay')
     plt.xlabel('time [ms]')
     plt.ylabel('pre-synaptic neuron id')
@@ -366,28 +417,51 @@ def plot_bursts(spike_train, neurons, time, delay, ids, fname='cell_'):
         mlist += (spike_train[j] - delay).tolist()
 
     plt.figure(figsize=(12, 10))
-    plt.hist(np.sort(mlist), density=True, bins=100,
-             label='spike times')
+    plt.hist(
+        np.sort(mlist),
+        density=True,
+        bins=100,
+        label='spike times'
+    )
     plt.xlabel('time [ms]')
     plt.ylabel('probability density')
     plt.xlim([0, time-delay])
-    plt.xticks(ticks=range(0, time-delay, int(time/10)),
-               labels=[str(ii+delay) for ii in range(0, time-delay,
-                                                     int(time/10))])
+    plt.xticks(
+        ticks=range(0, time-delay, int(time/10)),
+        labels=[str(ii+delay) for ii in range(0, time-delay, int(time/10))]
+    )
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    spikes = bursting_spikes(rate=15,
-                             nrun=2,
-                             N=50,
-                             delay=400,
-                             dt=0.1,
-                             noise=0.1,
-                             burst_num=100,
-                             burst_len=50,
-                             interburst=150,
-                             mode='random',
-                             save=True,
-                             visualize=True)
+    spikes = bursting_spikes(
+        rate=5,
+        nrun=2,
+        N=50,
+        delay=400,
+        dt=0.1,
+        noise=0.0,
+        burst_num=100,
+        burst_len=50,
+        interburst=150,
+        mode='random',
+        save=True,
+        visualize=True
+    )
+
+
+    spikes = theta_filtered_spikes(
+        rate=20,
+        nrun=1,
+        N=50,
+        time=2000,
+        delay=400,
+        noise=0.1,
+        f_theta=8,
+        phi_theta=0,
+        dt=0.1,
+        save=False,
+        visualize=True,
+        fname='cell_'
+    )
